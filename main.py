@@ -1,12 +1,13 @@
 import streamlit as st
 import pandas as pd
+import pathlib
 
 st.title("Cardkung AI Visualization")
-st.markdown("TEST")
-st.markdown("## TEST")
+st.markdown("## SIT Independent Study Visualization")
 
-uploaded_files = st.file_uploader("Choose a CSV file", accept_multiple_files=True)
-for uploaded_file in uploaded_files:
-    bytes_data = uploaded_file.read()
-    st.write("filename:", uploaded_file.name)
-    st.write(bytes_data)
+st.markdown("Upload the CSV File")
+
+#uploaded_files = st.file_uploader("Choose a CSV file", accept_multiple_files=True, type=["csv"])
+#st.write("filename:", uploaded_files.name)
+
+uploaded_file = st.file_uploader("Choose a CSV file", type=["csv"])
