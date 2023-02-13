@@ -17,7 +17,7 @@ dataset_name = st.selectbox("Select Dataset", ("Death from road accident", "Elec
 if dataset_name == "Death from road accident":
         df = pd.read_csv("./dataset/DataSet_clean_CSV.csv",
                          skiprows=0, #use when have blank row before data table
-                         nrows=1000     #use when want to limit dataset  
+                         #nrows=10000     #use when want to limit dataset  
         ) # read a CSV file inside the 'data" folder next to 'main.py'
         # df = pd.read_excel(...)  # will work for Excel files
 elif dataset_name == "Electric use in BKK":
@@ -29,10 +29,10 @@ st.markdown(dataset_name)  # add a title
 #st.dataframe(df) #visualize my dataframe in the Streamlit app
 
 st.sidebar.header("Please filter here")
-deadyear = st.sidebar.selectbox(
+deadyear = st.sidebar.multiselect(
         "Select year:",
         options=df["DeadYear"].unique(),
-        #default=df["DeadYear"].unique()
+        default=df["DeadYear"].unique()
 )
 
 deadmonth = st.sidebar.multiselect(
@@ -43,7 +43,7 @@ deadmonth = st.sidebar.multiselect(
 
 region = st.sidebar.multiselect(
         "Select Region:",
-        options=df["Region"].unique(), 
+        options=df["Region"].unique(),
         default=df["Region"].unique()
 )
 
@@ -78,3 +78,48 @@ with left2_column:
         st.subheader(f"{average_age}")
 
 st.markdown("---")
+
+# Make a bar chart
+
+dead_by_month = (
+        df_selection.groupby(by=["DeadMonth"]).count()[["id"]].sort_values(by="id")
+)
+fig_dead_month = px.bar(
+        dead_by_month,
+        x="id",
+        y=dead_by_month.index,
+        orientation="h",
+        title="<b>Dead by Month</b>",
+        color_discrete_sequence=["#0083B8"] * len(dead_by_month),
+        template="plotly_white",
+)
+fig_dead_month.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=(dict(showgrid=False))
+)
+
+dead_by_region = (
+        df_selection.groupby(by=["Region"]).count()[["id"]].sort_values(by="id")
+)
+fig_dead_region = px.bar(
+        dead_by_region,
+        x="id",
+        y=dead_by_region.index,
+        orientation="h",
+        title="<b>Dead by Region</b>",
+        color_discrete_sequence=["Green"] * len(dead_by_region),
+        template="plotly_white",
+)
+fig_dead_region.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=(dict(showgrid=False))
+)
+
+left_chart1_column, right_chart1_column = st.columns(2)
+with left_chart1_column:
+        st.plotly_chart(fig_dead_month)
+with right_chart1_column:
+        st.plotly_chart(fig_dead_region)
+
+
+# Make a bar chart2
