@@ -5,5 +5,4 @@
 - pip install matplotlib
 
 # Run
-'streamlit run main.py' http://localhost:8502
-http://localhost:8501 for demo
+'streamlit run main.py' http://localhost:8501
