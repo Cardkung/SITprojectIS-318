@@ -12,7 +12,7 @@ st.markdown("# SIT Independent Study Visualization")
 
 st.markdown("## Select the dataset")
 
-dataset_name = st.selectbox("Select Dataset", ("Death from road accident", "Electric use in BKK"))
+dataset_name = st.selectbox("Select Dataset", ("Death from road accident",))
 
 if dataset_name == "Death from road accident":
         df = pd.read_csv("./dataset/DataSet_clean_CSV.csv",
@@ -62,7 +62,7 @@ st.dataframe(df_selection)
 
 st.markdown("---")
 #------------Main Page----------------
-st.markdown("## :bar_chart: Amount of Dead from accident Dashboard")
+st.markdown("## :bar_chart: Amount of Death from accident Dashboard")
 
 
 #----TOP Dead
@@ -71,7 +71,7 @@ average_age = round(df_selection["Age"].mean(), 2)
 
 left_column, left2_column = st.columns(2)
 with left_column:
-        st.subheader("Total Dead:")
+        st.subheader("Total Death:")
         st.subheader(f"{total_dead:,}")
 with left2_column:
         st.subheader("Average Age (Years):")
@@ -79,24 +79,26 @@ with left2_column:
 
 st.markdown("---")
 
-# Make a bar chart
+# Make a bar chart (Vertical) 
 
 dead_by_month = (
         df_selection.groupby(by=["DeadMonth"]).count()[["id"]].sort_values(by="id")
 )
 fig_dead_month = px.bar(
         dead_by_month,
-        x="id",
-        y=dead_by_month.index,
-        orientation="h",
+        x=dead_by_month.index,
+        y="id",
         title="<b>Dead by Month</b>",
         color_discrete_sequence=["#0083B8"] * len(dead_by_month),
         template="plotly_white",
 )
 fig_dead_month.update_layout(
+        xaxis=dict(tickmode="linear"),
         plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=(dict(showgrid=False))
+        yaxis=(dict(showgrid=False)),
 )
+
+# Make a bar chart2 (Horizon) 
 
 dead_by_region = (
         df_selection.groupby(by=["Region"]).count()[["id"]].sort_values(by="id")
@@ -112,14 +114,20 @@ fig_dead_region = px.bar(
 )
 fig_dead_region.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
-        xaxis=(dict(showgrid=False))
+        xaxis=(dict(showgrid=False)),
 )
 
-left_chart1_column, right_chart1_column = st.columns(2)
-with left_chart1_column:
-        st.plotly_chart(fig_dead_month)
-with right_chart1_column:
-        st.plotly_chart(fig_dead_region)
+left_column, right_column = st.columns(2)
+left_column.plotly_chart(fig_dead_month, use_container_width=True)
+right_column.plotly_chart(fig_dead_region, use_container_width=True)
 
 
-# Make a bar chart2
+#----HIDE STREAMLIT STYLE----
+hide_st_syle = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        </style>
+        """
+st.markdown(hide_st_syle, unsafe_allow_html=True)
