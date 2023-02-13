@@ -1,5 +1,5 @@
 streamlit
 pandas
 pathlib
-matplotlib.pyplot
-plotly.express
+matplotlib
+plotly
