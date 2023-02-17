@@ -31,20 +31,20 @@ st.markdown(dataset_name)  # add a title
 st.sidebar.header("Please filter here")
 deadyear = st.sidebar.multiselect(
         "Select year:",
-        options=df["DeadYear"].unique(),
-        default=df["DeadYear"].unique()
+        options=df.sort_values(by="DeadYear")["DeadYear"].unique(),
+        default=df.sort_values(by="DeadYear")["DeadYear"].unique()
 )
 
 deadmonth = st.sidebar.multiselect(
         "Select month:",
-        options=df["DeadMonth"].unique(),
-        default=df["DeadMonth"].unique()
+        options=df.sort_values(by="DeadMonth")["DeadMonth"].unique(),
+        default=df.sort_values(by="DeadMonth")["DeadMonth"].unique()
 )
 
 region = st.sidebar.multiselect(
         "Select Region:",
-        options=df["Region"].unique(),
-        default=df["Region"].unique()
+        options=df.sort_values(by="Region")["Region"].unique(),
+        default=df.sort_values(by="Region")["Region"].unique()
 )
 
 #province = st.sidebar.selectbox(
@@ -121,6 +121,44 @@ left_column, right_column = st.columns(2)
 left_column.plotly_chart(fig_dead_month, use_container_width=True)
 right_column.plotly_chart(fig_dead_region, use_container_width=True)
 
+
+# Make chart 3 (Death by Year)
+
+dead_by_year = (
+        df_selection.groupby(by=["DeadYear"]).count()[["id"]].sort_values(by="id")
+)
+ 
+time_chart_line = pd.DataFrame(
+        dead_by_year,
+)
+
+st.area_chart(time_chart_line)
+
+#Make Chart 4 (Death by province)
+
+dead_by_province = (
+        df_selection.groupby(by=["Province"]).count()[["id"]].sort_values(by="id", ascending = True)
+)
+
+fig_dead_province = px.bar(
+        dead_by_province,
+        x="id",
+        y=dead_by_province.index,
+        text="id",
+        orientation="h",
+        title="<b>Death by Province</b>",
+        color_discrete_sequence=["orange"] * len(dead_by_province),
+        template="plotly_white",
+)
+
+fig_dead_province.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+
+fig_dead_province.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)",
+        xaxis=(dict(showgrid=False)),
+)
+
+st.plotly_chart(fig_dead_province, use_container_width=True)
 
 #----HIDE STREAMLIT STYLE----
 hide_st_syle = """
