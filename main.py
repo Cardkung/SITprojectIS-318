@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
+from datetime import date
 
 st.set_page_config(page_title="AI dataset Dashboard",
                    page_icon=":bar_chart:",
@@ -29,6 +30,13 @@ st.markdown(dataset_name)  # add a title
 #st.dataframe(df) #visualize my dataframe in the Streamlit app
 
 st.sidebar.header("Please filter here")
+
+cluster = st.sidebar.multiselect(
+        "Select Group Clustering:",
+        options=df.sort_values(by="Assignments")["Assignments"].unique(),
+        default=df.sort_values(by="Assignments")["Assignments"].unique()
+)
+
 deadyear = st.sidebar.multiselect(
         "Select year:",
         options=df.sort_values(by="DeadYear")["DeadYear"].unique(),
@@ -55,7 +63,7 @@ region = st.sidebar.multiselect(
 
 
 df_selection = df.query(
-        "DeadYear == @deadyear & DeadMonth == @deadmonth & Region == @region"
+        "Assignments == @cluster & DeadYear == @deadyear & DeadMonth == @deadmonth & Region == @region"
 )
 
 st.dataframe(df_selection)
@@ -88,10 +96,14 @@ fig_dead_month = px.bar(
         dead_by_month,
         x=dead_by_month.index,
         y="id",
-        title="<b>Dead by Month</b>",
+        text="id",
+        title="<b>Death by Month</b>",
         color_discrete_sequence=["#0083B8"] * len(dead_by_month),
         template="plotly_white",
 )
+
+fig_dead_month.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+
 fig_dead_month.update_layout(
         xaxis=dict(tickmode="linear"),
         plot_bgcolor="rgba(0,0,0,0)",
@@ -107,11 +119,15 @@ fig_dead_region = px.bar(
         dead_by_region,
         x="id",
         y=dead_by_region.index,
+        text="id",
         orientation="h",
-        title="<b>Dead by Region</b>",
+        title="<b>Death by Region</b>",
         color_discrete_sequence=["Green"] * len(dead_by_region),
         template="plotly_white",
 )
+
+fig_dead_region.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+
 fig_dead_region.update_layout(
         plot_bgcolor="rgba(0,0,0,0)",
         xaxis=(dict(showgrid=False)),
@@ -132,6 +148,7 @@ time_chart_line = pd.DataFrame(
         dead_by_year,
 )
 
+st.markdown("##### Death Year on Year")
 st.area_chart(time_chart_line)
 
 #Make Chart 4 (Death by province)
