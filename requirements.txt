@@ -4,3 +4,8 @@ pathlib
 matplotlib
 plotly
 datetime
+numpy
+seaborn
+datetime
+xgboost
+sklearn
