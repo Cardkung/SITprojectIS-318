@@ -11,4 +11,3 @@ xgboost
 sklearn
 sklearn.metrics
 scikit-learn
---upgrade pip
