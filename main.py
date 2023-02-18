@@ -1,8 +1,14 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt 
+import numpy as np
+import seaborn as sns
 import plotly.express as px
-from datetime import date
+from datetime import datetime
+import warnings
+warnings.filterwarnings("ignore")
+
+
 
 st.set_page_config(page_title="AI dataset Dashboard",
                    page_icon=":bar_chart:",
@@ -13,6 +19,30 @@ st.markdown("# SIT Independent Study Visualization")
 
 st.markdown("## Select the dataset")
 
+
+df2 = pd.read_csv("./dataset/DataSet_Time.csv")
+st.write(df2.shape)
+df2["Date"]= pd.to_datetime(df2["Date"], infer_datetime_format=True)
+
+df2['Year'] = df2['Date'].dt.year
+df2['Month'] = df2['Date'].dt.month
+df2['Day'] = df2['Date'].dt.day
+df2['Quarter'] = df2['Date'].dt.quarter
+
+
+fig1 = plt.figure(figsize=(15,1))
+sns.lineplot(x=df2["Date"], y=df2["Total"], data=df2)
+plt.title("Total Death")
+
+st.pyplot(fig1)
+
+
+st.write(df2)
+
+#------------------------------------------------------
+
+
+
 dataset_name = st.selectbox("Select Dataset", ("Death from road accident",))
 
 if dataset_name == "Death from road accident":
@@ -21,6 +51,7 @@ if dataset_name == "Death from road accident":
                          #nrows=10000     #use when want to limit dataset  
         ) # read a CSV file inside the 'data" folder next to 'main.py'
         # df = pd.read_excel(...)  # will work for Excel files
+        
 elif dataset_name == "Electric use in BKK":
         df = pd.read_csv("./dataset/Electric use in BKK.csv") # read a CSV file inside the 'data" folder next to 'main.py'
 else:
@@ -176,6 +207,10 @@ fig_dead_province.update_layout(
 )
 
 st.plotly_chart(fig_dead_province, use_container_width=True)
+
+
+
+
 
 #----HIDE STREAMLIT STYLE----
 hide_st_syle = """
