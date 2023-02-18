@@ -10,3 +10,4 @@ datetime
 xgboost
 sklearn
 sklearn.metrics
+scikit-learn
