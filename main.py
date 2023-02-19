@@ -96,9 +96,10 @@ y_train = train[TARGET]
 X_test = test[FEATURES]
 y_test = test[TARGET]
 
+
 st.write("training....")
 
-reg = xgb.XGBRegressor(n_estimators=2000, early_stopping_round=50,
+reg = xgb.XGBRegressor(n_estimators=1000, early_stopping_round=50,
                         learning_rate=0.001)
 reg.fit(X_train, y_train,
         eval_set=[(X_train, y_train), (X_test, y_test)],
@@ -142,6 +143,133 @@ r_column.write(chk2)
 
 
 #------------------------------------------------------
+# Time series cross validation
+
+tss = TimeSeriesSplit(n_splits=5, test_size=365*1, gap=1)
+df2 = df2.sort_index()
+
+fold = 0
+for train_idx, val_idx in tss.split(df2):
+        train = df2.iloc[train_idx]
+        test = df2.iloc[val_idx]
+        fold += 1
+
+
+#Forecast Horizon Explained
+
+def create_features(df2):
+        """
+        Create Time series features based on time series index
+        """
+        df2['hour'] = df2.index.hour
+        df2['dayofweek'] = df2.index.day_of_week 
+        df2['quarter'] = df2.index.quarter
+        df2['month'] = df2.index.month
+        df2['year'] = df2.index.year
+        df2['dayofyear'] = df2.index.day_of_year
+        return df2
+
+df2 = create_features(df2)
+
+
+#LAG Features
+def add_lag(df2):
+        target_map = df2['Total'].to_dict()
+        df2['lag1'] = (df2.index - pd.Timedelta('364 days')).map(target_map)
+        df2['lag2'] = (df2.index - pd.Timedelta('728 days')).map(target_map)
+        df2['lag3'] = (df2.index - pd.Timedelta('1092 days')).map(target_map)
+        return df2
+
+tss = TimeSeriesSplit(n_splits=5, test_size=365*1, gap=1)
+df2 = df2.sort_index()
+
+df2 = add_lag(df2)
+
+fold = 0
+pred = []
+scores = []
+for train_idx, val_idx in tss.split(df2):
+        train = df2.iloc[train_idx]
+        test = df2.iloc[val_idx]
+
+        train = create_features(train)
+        test = create_features(test)
+
+        FEATURES = ['dayofyear', 'hour', 'dayofweek', 'quarter', 'month', 'year', 'lag1', 'lag2', 'lag3']
+        TARGET = 'Total'
+        X_train = train[FEATURES]
+        y_train = train[TARGET]
+
+        X_test = test[FEATURES]
+        y_test = test[TARGET]
+
+        reg = xgb.XGBRegressor(base_score=0.5, booster='gbtree',
+                                n_estimators=1000,
+                                early_stopping_rounds=50,
+                                objective='reg:linear',
+                                max_depth=3,
+                                learning_rate=0.01)
+        reg.fit(X_train, y_train,
+                eval_set=[(X_train, y_train), (X_test, y_test)],
+                verbose=100
+        )
+        y_pred = reg.predict(X_test)
+        pred.append(y_pred)
+        score = np.sqrt(mean_squared_error(y_test, y_pred))
+        scores.append(score)
+
+st.write(f'Scores across fols {np.mean(scores):0.4f}')
+st.write(f'Fold scores : {scores}')
+
+#-------- PREDICT FUTURE DATA
+# Retrain on all data
+
+df2 = create_features(df2)
+
+FEATURES = ['dayofyear', 'hour', 'dayofweek', 'quarter', 'month', 'year', 'lag1', 'lag2', 'lag3']
+TARGET = 'Total'
+
+X_all = train[FEATURES]
+y_all = train[TARGET]
+
+
+reg = xgb.XGBRegressor(base_score=0.5, 
+                        booster='gbtree',
+                        n_estimators=500,
+                        objective='reg:linear',
+                        max_depth=3,
+                        learning_rate=0.01)
+reg.fit(X_all, y_all,
+        eval_set=[(X_all, y_all)],
+        verbose=100)
+
+#Create Future Dataframe
+
+future = pd.date_range('2022-10-01', '2024-12-31', freq='1d')
+future_df2 = pd.DataFrame(index=future)
+future_df2['isFuture'] = True
+df2['isFuture'] = False
+df2_and_future = pd.concat([df2, future_df2])
+df2_and_future = create_features(df2_and_future)
+df2_and_future = add_lag(df2_and_future)
+
+future_w_features = df2_and_future.query('isFuture').copy()
+
+
+
+#Predict the future
+
+future_w_features['pred'] = reg.predict(future_w_features[FEATURES])
+st.write(future_w_features)
+
+#plot chart
+
+figpred = plt.figure(figsize=(15,1))
+sns.lineplot(x=train.index, y=train["Total"], data=train, color='green', legend='auto', label="Train")
+sns.lineplot(x=test.index, y=test["Total"], data=test, color='orange', legend='auto', label="Test")
+sns.lineplot(x=future_w_features.index, y=future_w_features["pred"], data=future_w_features, color='grey', legend='auto', label="Forecast")
+plt.title("Train / Test / Forecast DataSet")
+st.pyplot(figpred)
 
 
 #----HIDE STREAMLIT STYLE----
