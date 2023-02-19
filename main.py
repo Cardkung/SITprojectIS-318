@@ -235,7 +235,7 @@ y_all = train[TARGET]
 
 reg = xgb.XGBRegressor(base_score=0.5, 
                         booster='gbtree',
-                        n_estimators=500,
+                        n_estimators=1000,
                         objective='reg:linear',
                         max_depth=3,
                         learning_rate=0.01)
