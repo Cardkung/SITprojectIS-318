@@ -260,14 +260,19 @@ future_w_features = df2_and_future.query('isFuture').copy()
 #Predict the future
 
 future_w_features['pred'] = reg.predict(future_w_features[FEATURES])
-st.write(future_w_features)
+
+future_w_features.columns = ['Date', 'G0', 'G1', 'G2', 'G3', 'G4', 'Total', 'hour', 
+'dayofweek', 'quarter', 'month', 'year', 'dayofyear', 'prediction', 'lag1', 'lag2', 'lag3'
+'isFuture', 'prediction total']
+#st.write(future_w_features)
+st.write(future_w_features['prediction total'])
 
 #plot chart
 
 figpred = plt.figure(figsize=(15,1))
 sns.lineplot(x=train.index, y=train["Total"], data=train, color='green', legend='auto', label="Train")
 sns.lineplot(x=test.index, y=test["Total"], data=test, color='orange', legend='auto', label="Test")
-sns.lineplot(x=future_w_features.index, y=future_w_features["pred"], data=future_w_features, color='grey', legend='auto', label="Forecast")
+sns.lineplot(x=future_w_features.index, y=future_w_features["prediction total"], data=future_w_features, color='grey', legend='auto', label="Forecast")
 plt.title("Train / Test / Forecast DataSet")
 st.pyplot(figpred)
 
