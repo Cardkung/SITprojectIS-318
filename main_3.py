@@ -15,13 +15,12 @@ st.set_page_config(page_title="AI dataset Dashboard",
                    layout="wide"
 )
 
-st.markdown("# SIT Independent Study Visualization")
+st.markdown("# SIT Independent Study : Artificial intelligence (AI) prediction 64130700318")
 
 
 df2 = pd.read_csv("./dataset/DataSet_Time.csv")
 dfr = pd.read_csv("./dataset/data_time_r.csv")
-indexp = pd.read_csv("./dataset/index_p.csv")
-st.write(dfr.shape)
+#st.write(dfr.shape)
 
 dfr["Date"]= pd.to_datetime(dfr["Date"], infer_datetime_format=True)
 
@@ -46,10 +45,10 @@ dfr.index =  pd.to_datetime(dfr.index)
 #------------------------------------------------------
 #Train / Split
 
-st.markdown("## Select the Train/Test point")
+st.markdown("## Select the Train/Test seperate point")
 dindex = st.date_input("Select Date",
         datetime.date(2019, 1, 1))
-st.write('Your Seperate Train/Test date point is:', dindex)
+st.write('Your Seperate Train/Test seperate date point is:', dindex)
 
 dindex= pd.to_datetime(dindex)
 
@@ -79,7 +78,7 @@ dfr = create_features(dfr)
 
 #Vistualize Features / Target Relationship
 
-fig2 = plt.figure(figsize=(10,5))
+fig2 = plt.figure(figsize=(10,3))
 sns.boxplot(data=dfr, x='month', y='Total',)
 plt.title('Dead')
 #st.pyplot(fig2)
@@ -98,14 +97,21 @@ y_train = train[TARGET]
 X_test = test[FEATURES]
 y_test = test[TARGET]
 
+
 #Select N_Estimators
 n_est = st.select_slider('Select N_Estimators parameter', options=[300, 500, 800, 1000, 1500, 2000, 2500, 3000])
-st.write('You N_Estimators is', n_est)
+st.write('Your N_Estimators is', n_est)
+
+#Select train time
+lrn_rate_pre = st.slider('Select Learning rate (milliseconds)', 1, 30, 5)
+lrn_rate = lrn_rate_pre/1000
+st.write('Your Learning rate is', lrn_rate, 'second')
+
 
 st.write("training....")
 
 reg = xgb.XGBRegressor(n_estimators=n_est, early_stopping_round=50,
-                        learning_rate=0.01)
+                        learning_rate=lrn_rate)
 reg.fit(X_train, y_train,
         eval_set=[(X_train, y_train), (X_test, y_test)],
         verbose=100
@@ -138,9 +144,9 @@ st.markdown(f'#### Mean Square Error : :green[{score:0.2f}]')
 
 #Create Future Dataframe
 
-st.markdown("## Select the end forecast date")
+st.markdown("## Select the endpoint forecast date")
 endpre = st.date_input("Select Date",
-        datetime.date(2023, 12, 31))
+        datetime.date(2023, 9, 30))
 st.write('Your end forecast date:', endpre)
 
 endpre= pd.to_datetime(endpre)
@@ -149,18 +155,68 @@ endpre= pd.to_datetime(endpre)
 futurepred = pd.date_range('2022-10-01', endpre, freq='1d')
 future_df3 = pd.DataFrame(index=futurepred,)
 future_df3 = create_features(future_df3)
-future_df3['prediction'] = reg.predict(future_df3[FEATURES]).round(2)
+future_df3['prediction'] = reg.predict(future_df3[FEATURES]).round()
+
+
+#plot future table
 #st.write(future_df3)
 
+#plot chart dead
 
-#plot chart
-
-figpred = plt.figure(figsize=(15,3))
+figpred = plt.figure(figsize=(15,2))
 sns.lineplot(x=train.index, y=train["Total"], data=train, color='green', legend='auto', label="Train")
 sns.lineplot(x=test.index, y=test["Total"], data=test, color='orange', legend='auto', label="Test")
 sns.lineplot(x=future_df3.index, y=future_df3["prediction"], data=future_df3, color='grey', legend='auto', label="Forecast")
 plt.title("Train / Test / Forecast DataSet")
 st.pyplot(figpred)
+
+st.markdown(f'##### Prediction Chart on Time')
+
+# Make left chart  timeline predict death
+
+dead_by_year = (
+        future_df3['prediction']
+)
+ 
+time_chart_line = pd.DataFrame(
+        dead_by_year,
+)
+
+
+
+# Make a right bar chart (Vertical) 
+
+dead_by_month = (
+        future_df3.groupby(by=["month"]).sum()[["prediction"]].sort_values(by="month")
+)
+fig_dead_month = px.bar(
+        dead_by_month,
+        x=dead_by_month.index,
+        y="prediction",
+        text="prediction",
+        title="<b>Prediction of each month death</b>",
+        color_discrete_sequence=["#0083B8"] * len(dead_by_month),
+        template="plotly_white",
+)
+
+fig_dead_month.update_traces(texttemplate='%{text:.2s}', textposition='outside')
+
+fig_dead_month.update_layout(
+        xaxis=dict(tickmode="linear"),
+        plot_bgcolor="rgba(0,0,0,0)",
+        yaxis=(dict(showgrid=False)),
+)
+
+
+
+#plot chart
+
+left_column, right_column = st.columns(2)
+left_column.line_chart(time_chart_line)
+right_column.plotly_chart(fig_dead_month, use_container_width=True)
+
+
+
 
 
 r_show = st.selectbox(
@@ -188,7 +244,7 @@ y_testr = test[TARGETR]
 st.write("training....")
 
 reg2 = xgb.XGBRegressor(n_estimators=n_est, early_stopping_round=50,
-                        learning_rate=0.01)
+                        learning_rate=lrn_rate)
 
 reg2.fit(X_trainr, y_trainr,
         eval_set=[(X_trainr, y_trainr), (X_testr, y_testr)],
@@ -198,10 +254,12 @@ reg2.fit(X_trainr, y_trainr,
 st.markdown(f'#### Prediction Death of Region : :red[{r_show}]')
 
 future_dfr['prediction'] = reg2.predict(future_dfr[FEATURES]).round()
-st.write(future_dfr)
+
+#Write Table
+#st.write(future_dfr)
 
 
-#plot chart
+#plot chart death region
 
 figpredr = plt.figure(figsize=(15,1))
 sns.lineplot(x=train.index, y=train[r_show], data=train, color='green', legend='auto', label="Train")
@@ -209,3 +267,16 @@ sns.lineplot(x=test.index, y=test[r_show], data=test, color='orange', legend='au
 sns.lineplot(x=future_dfr.index, y=future_dfr["prediction"], data=future_dfr, color='grey', legend='auto', label="Forecast")
 plt.title('Train / Test / Forecast DataSet of Region')
 st.pyplot(figpredr)
+
+# Make chart 3 timeline predict death by region
+
+dead_by_year_region = (
+        future_dfr['prediction']
+)
+ 
+time_chart_line_r = pd.DataFrame(
+        dead_by_year_region,
+)
+
+st.markdown(f'##### Prediction of Death on Time Region : {r_show}')
+st.area_chart(time_chart_line_r)
